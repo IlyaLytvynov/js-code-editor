@@ -9,9 +9,11 @@ const root = ReactDOM.createRoot(el!);
 
 const App = () => {
   return (
-    <div>
-      <CodeCell />
-    </div>
+    <>
+      <div>
+        <CodeCell />
+      </div>
+    </>
   );
 };
 

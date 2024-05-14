@@ -5,32 +5,41 @@ import { useState, useEffect, useRef } from 'react';
 import CodeEditor from './code-editor';
 import Preview from './preview';
 import bundle from '../bundler';
-
-const el = document.getElementById('root');
+import Resizable from './resizable';
 
 const CodeCell = () => {
   const [code, setCode] = useState('');
   const [input, setInput] = useState('');
+  const [err, setError] = useState<null|string>(null);
+  const timeRef = useRef<NodeJS.Timeout | null>(null);
 
-  const onClick = async () => {
-    setCode(await bundle(input));
+  const changeHandler = (value: string) => {
+    setInput(value);
   };
 
+  useEffect(() => {
+    timeRef.current = setTimeout(async () => {
+      const output = await bundle(input);
+      if (output) {
+        setCode(output.code);
+        setError(output.err);
+      }
+    }, 2000);
+    return () => {
+      clearTimeout(timeRef.current as unknown as number);
+    };
+  }, [input]);
+
   return (
-    <div>
-      <CodeEditor
-        initialValue='const a = 1;'
-        onChange={(value) => setInput(value)}
-      />
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      ></textarea>
-      <div>
-        <button onClick={onClick}>Submit</button>
+    <Resizable direction='vertical'>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'row' }}>
+        <Resizable direction='horizontal'>
+          <CodeEditor initialValue='const a = 1;' onChange={changeHandler} />
+        </Resizable>
+        <Preview code={code} err={err}/>
       </div>
-      <Preview code={code} />
-    </div>
+    </Resizable>
   );
 };
- export default CodeCell
+
+export default CodeCell;
